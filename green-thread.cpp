@@ -63,6 +63,7 @@ void GreenThread::Yield() {
             curThread = cur;
             break;
         }
+        assert(cur != nxt);
     }
 }
 
@@ -84,7 +85,7 @@ GreenThread::Thread* GreenThread::__InternalCreate(std::function<void()>&& func)
     GreenThread::Thread* newThread = new GreenThread::Thread;
     newThread->joinedBy = nullptr;
     newThread->finished = newThread->waiting = false;
-    newThread->func = func;
+    newThread->func = std::move(func);
 
     size_t stackLen;
     {
