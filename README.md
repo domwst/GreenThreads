@@ -3,7 +3,7 @@ Simple Implementation of green threads (corutines) -- several functions can run 
 
 ## Usage
 Use GreenThread::Create(func, params...) to create new green thread, GreenThread::Join to join another green thread and GreenThread::Yield to pass execution to next thread.
-See test.cpp for example
+See example.cpp for example
 
 ## Compilation
 ```bash
