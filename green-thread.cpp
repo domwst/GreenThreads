@@ -1,3 +1,5 @@
+#pragma once
+
 #include "green-thread.h"
 
 #include <cassert>
@@ -63,7 +65,7 @@ void GreenThread::Yield() {
             curThread = cur;
             break;
         }
-        assert(cur != nxt);
+        assert(nxt->next != cur->next);
     }
 }
 
