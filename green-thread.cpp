@@ -5,8 +5,6 @@
 #include <sys/mman.h>
 #include <sys/resource.h>
 
-#include <iostream>
-
 namespace {
     GreenThread::Thread *mainThread, *curThread;
 
