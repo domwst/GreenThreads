@@ -1,11 +1,11 @@
-#pragma once
-
 #include "green-thread.h"
 
 #include <cassert>
 #include <utility>
 #include <sys/mman.h>
 #include <sys/resource.h>
+
+#include <iostream>
 
 namespace {
     GreenThread::Thread *mainThread, *curThread;
@@ -16,7 +16,7 @@ namespace {
             curThread = mainThread;
             mainThread->joinedBy = nullptr;
             mainThread->next = mainThread->prev = mainThread;
-            mainThread->finished = mainThread->waiting = false;
+            mainThread->finished = false;
         }
 
         ~GreenThreadInit() {
@@ -36,10 +36,9 @@ namespace {
         ptr->next = toInsert;
     }
 
-    void RemoveThread(GreenThread::Thread* toErase) {
-        toErase->next->prev = toErase->prev;
-        toErase->prev->next = toErase->next;
-        toErase->next = toErase->prev = toErase;
+    void RemoveThread(GreenThread::Thread* toRemove) {
+        toRemove->next->prev = toRemove->prev;
+        toRemove->prev->next = toRemove->next;
     }
 
     extern "C" void GreenThreadFirstSwitch(GreenThread::Thread* cur, GreenThread::Thread* newTh);
@@ -50,35 +49,32 @@ namespace {
         assert(curThread == toExecute);
         curThread->finished = true;
         if (curThread->joinedBy != nullptr) {
-            assert(curThread->joinedBy->waiting);
-            curThread->joinedBy->waiting = false;
+            InsertThreadAfter(curThread, curThread->joinedBy);
         }
+        assert(curThread->next != curThread);
+        RemoveThread(curThread);
         GreenThread::Yield();
     }
 }
 
 void GreenThread::Yield() {
     GreenThread::Thread* cur = curThread;
-    for (GreenThread::Thread* nxt = cur->next; nxt != cur; nxt = nxt->next) {
-        if (!nxt->finished && !nxt->waiting) {
-            GreenThreadSwitch(cur, nxt);
-            curThread = cur;
-            break;
-        }
-        assert(nxt->next != cur->next);
-    }
+    GreenThreadSwitch(cur, cur->next);
+    curThread = cur;
 }
 
 void GreenThread::Join(GreenThread::Thread* other) {
     assert(other->joinedBy == nullptr);
     assert(other != mainThread);
     if (!other->finished) {
+        assert(curThread->next != curThread);
         other->joinedBy = curThread;
-        curThread->waiting = true;
+        RemoveThread(curThread);
         GreenThread::Yield();
-        assert(!curThread->waiting);
+        assert(curThread->next->prev == curThread);
+        assert(curThread->prev->next == curThread);
+        assert(other->finished);
     }
-    RemoveThread(other);
     munmap(other->botOfStack, (char*)other->topOfStack - (char*)other->botOfStack);
     delete other;
 }
@@ -86,7 +82,7 @@ void GreenThread::Join(GreenThread::Thread* other) {
 GreenThread::Thread* GreenThread::__InternalCreate(std::function<void()>&& func) {
     GreenThread::Thread* newThread = new GreenThread::Thread;
     newThread->joinedBy = nullptr;
-    newThread->finished = newThread->waiting = false;
+    newThread->finished = false;
     newThread->func = std::move(func);
 
     size_t stackLen;

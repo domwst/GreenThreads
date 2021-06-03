@@ -21,8 +21,7 @@ namespace GreenThread {
         Thread* next;
         Thread* prev;
 
-        bool finished, waiting;
-
+        bool finished;
     };
 
     void Yield();
