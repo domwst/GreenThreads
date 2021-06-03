@@ -98,7 +98,7 @@ GreenThread::Thread* GreenThread::__InternalCreate(std::function<void()>&& func)
     newThread->topOfStack = (char*)newThread->botOfStack + stackLen;
 
     GreenThread::Thread* cur = curThread;
-    InsertThreadAfter(cur, newThread);
+    InsertThreadAfter(cur->prev, newThread);
     GreenThreadFirstSwitch(cur, newThread);
     curThread = cur;
     return newThread;
