@@ -10,7 +10,7 @@ See example.cpp for example
 g++ green-thread.cpp green-thread.S <yourCode> -std=c++17
 ```
 
-Yes I shuld've done makefile but I spent a lot of time for this implementation already
+Yes, I shuld've done makefile but I spent a lot of time for this implementation already
 
 ## Warning
 This code will only work on x86_64 architecture, on a system, that follows **System V AMD64 ABI** calling conventions (on Windows probably wouldn't work)
